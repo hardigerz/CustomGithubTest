@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="header_bar">50dp</dimen>
+    <dimen name="gap">5dp</dimen>
+    <dimen name="padding">10dp</dimen>
+    <dimen name="bigPadding">15dp</dimen>
+    <dimen name="largePadding">20dp</dimen>
+    <dimen name="tiniest">10sp</dimen>
+    <dimen name="tinier">11sp</dimen>
+    <dimen name="tiny">12sp</dimen>
+    <dimen name="smallest">13sp</dimen>
+    <dimen name="smaller">14sp</dimen>
+    <dimen name="small">15sp</dimen>
+    <dimen name="normal">16sp</dimen>
+    <dimen name="standard">17sp</dimen>
+    <dimen name="medium">18sp</dimen>
+    <dimen name="big">19sp</dimen>
+    <dimen name="bigger">20sp</dimen>
+    <dimen name="biggest">21sp</dimen>
+    <dimen name="large">22sp</dimen>
+    <dimen name="larger">23sp</dimen>
+    <dimen name="largest">24sp</dimen>
+    <dimen name="special">26sp</dimen>
+    <dimen name="special_big">30sp</dimen>
+    <dimen name="special_large">32sp</dimen>
+    <dimen name="super_big">36sp</dimen>
+    <dimen name="super_large">42sp</dimen>
+    <dimen name="edittext">42dp</dimen>
+    <dimen name="titleBar">50dp</dimen>
+    <dimen name="activity_margin">16dp</dimen>
+    <dimen name="activity_margin_quarter">4dp</dimen>
+    <dimen name="activity_margin_content">24dp</dimen>
+    <dimen name="activity_margin_half">8dp</dimen>
+
+    <dimen name="paddingItemDecorationDefault">8dp</dimen>
+    <dimen name="paddingItemDecorationEdge">24dp</dimen>
+    <dimen name="poster_thumb_width">72dp</dimen>
+    <dimen name="poster_thumb_height">96dp</dimen>
+
+    <dimen name="poster_hero_height">192dp</dimen>
+</resources>

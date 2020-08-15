@@ -9,4 +9,5 @@
     <string name="menu_refresh">Refresh</string>
     <string name="search">SEARCH</string>
     <string name="no_data">No Matching data found</string>
+    <string name="rate_limit">Rate Limit Exceed</string>
 </resources>

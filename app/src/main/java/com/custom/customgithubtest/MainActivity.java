@@ -30,6 +30,7 @@ import com.custom.customgithubtest.api.UserApi;
 import com.custom.customgithubtest.api.UserService;
 import com.custom.customgithubtest.model.Item;
 import com.custom.customgithubtest.model.UserSearch;
+import com.custom.customgithubtest.util.NetworkUtils;
 import com.custom.customgithubtest.util.PaginationScrollListener;
 
 import java.util.List;
@@ -43,10 +44,10 @@ public class MainActivity extends AppCompatActivity {
     RelativeLayout relativeLayout;
     TextView txtError;
     EditText editText;
-    String search="";
+    String search = "";
     RecyclerView recyclerView;
     ProgressBar progressBar;
-    SwipeRefreshLayout swipeRefreshLayout;
+    //    SwipeRefreshLayout swipeRefreshLayout;
     PaginationAdapter adapter;
     LinearLayoutManager linearLayoutManager;
     Button btnRetry;
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isLoading = false;
     private boolean isLastPage = false;
-    private static final int TOTAL_PAGES = 10;
+    private static final int TOTAL_PAGES = 30;
     private int currentPage = PAGE_START;
 
     @Override
@@ -66,9 +67,8 @@ public class MainActivity extends AppCompatActivity {
         errorLayout = findViewById(R.id.error_layout);
         btnRetry = findViewById(R.id.error_btn_retry);
         txtError = findViewById(R.id.error_txt_cause);
-        swipeRefreshLayout = findViewById(R.id.main_swiperefresh);
-        relativeLayout =findViewById(R.id.relative_header);
-        editText =findViewById(R.id.searchEditText);
+        relativeLayout = findViewById(R.id.relative_header);
+        editText = findViewById(R.id.searchEditText);
         userService = UserApi.getClient(this).create(UserService.class);
 
         adapter = new PaginationAdapter(this);
@@ -107,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
         userService = UserApi.getClient(this).create(UserService.class);
 
         btnRetry.setOnClickListener(view -> loadFirstPage(search));
-        swipeRefreshLayout.setOnRefreshListener(this::doRefresh);
         editText.setOnEditorActionListener(
                 new EditText.OnEditorActionListener() {
                     @Override
@@ -119,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                                         event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                             if (event == null || !event.isShiftPressed()) {
                                 // the user is done typing.
-                                InputMethodManager imm = (InputMethodManager)getApplicationContext().getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
+                                InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
                                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
 
                                 return true; // consume.
@@ -133,10 +132,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
     private void loadFirstPage(String kata) {
-        Log.e("loadFirstPage: ","loadfirstPage");
+        Log.e("loadFirstPage: ", "loadfirstPage");
+        Log.e("param", search);
+        Log.e("param2", String.valueOf(currentPage));
         hideErrorView();
         currentPage = PAGE_START;
         callUser(kata).enqueue(new Callback<UserSearch>() {
@@ -144,32 +143,41 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<UserSearch> call, Response<UserSearch> response) {
 //                Log.i(TAG, "onResponse: " + currentPage
 //                        + (response.raw().cacheResponse() != null ? "Cache" : "Network"));
-                hideErrorView();
-                adapter.getItemList().clear();
-                adapter.notifyDataSetChanged();
-                swipeRefreshLayout.setRefreshing(false);
-                 progressBar.setVisibility(View.GONE);
-                List<Item> items = fetchResults(response);
-//               doRefresh();
-                for (int i = 0; i < items.size(); i++) {
-                    Log.e("onResponse: ", items.get(i).getAvatarUrl());
-                    Log.e("onResponse: ", items.get(i).getLogin());
-                }
-                progressBar.setVisibility(View.VISIBLE);
-                Log.e( "onResponsesize: ", String.valueOf(items.size()));
-                adapter.addAll(items);
-
-                if (currentPage <= TOTAL_PAGES) {
-                    adapter.addLoadingFooter();
+                if (response.isSuccessful()) {
+                    hideErrorView();
+                    adapter.getItemList().clear();
+                    adapter.notifyDataSetChanged();
                     progressBar.setVisibility(View.GONE);
-                }
-                else isLastPage = true;
-                if (items.isEmpty()){
-                    adapter.clear();
-                    Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_data), Toast.LENGTH_SHORT).show();
-                }
+                    List<Item> items = fetchResults(response);
+                    for (int i = 0; i < items.size(); i++) {
+                        Log.e("onResponse: ", items.get(i).getAvatarUrl());
+                        Log.e("onResponse: ", items.get(i).getLogin());
+                    }
 
+                    Log.e("onResponsesize: ", String.valueOf(items.size()));
+                    adapter.addAll(items);
+
+                    if (currentPage <= TOTAL_PAGES) {
+                        adapter.addLoadingFooter();
+                        progressBar.setVisibility(View.GONE);
+                    } else {
+                        isLastPage = true;
+                        progressBar.setVisibility(View.GONE);
+                    }
+                    if (items.isEmpty()) {
+                        adapter.clear();
+                        Toast.makeText(getApplicationContext(), getResources().getString(R.string.no_data), Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+                if (response.code() == 404) {
+                    Toast.makeText(MainActivity.this, getString(R.string.no_data), Toast.LENGTH_SHORT).show();
+                }
+                if (response.code() == 403) {
+                    Toast.makeText(MainActivity.this, getString(R.string.rate_limit), Toast.LENGTH_SHORT).show();
+                }
             }
+
 
             @Override
             public void onFailure(Call<UserSearch> call, Throwable t) {
@@ -187,24 +195,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     private void loadNextPage(String kata) {
-        Log.d( "loadNextPage: " ,"loadNext"+currentPage);
+        Log.d("loadNextPage: ", "loadNext" + currentPage);
 
         callUser(kata).enqueue(new Callback<UserSearch>() {
             @Override
             public void onResponse(Call<UserSearch> call, Response<UserSearch> response) {
 //                Log.i(TAG, "onResponse: " + currentPage
 //                        + (response.raw().cacheResponse() != null ? "Cache" : "Network"));
+                if (response.code() == 200) {
+                    // Do awesome stuff
+                    adapter.removeLoadingFooter();
+                    isLoading = false;
 
-                adapter.removeLoadingFooter();
-                isLoading = false;
+                    List<Item> results = fetchResults(response);
+                    adapter.addAll(results);
 
-                List<Item> results = fetchResults(response);
-                adapter.addAll(results);
+                    if (currentPage != TOTAL_PAGES) adapter.addLoadingFooter();
+                    else isLastPage = true;
+                }
+                else if (response.code()==404){
+                    Toast.makeText(MainActivity.this, getString(R.string.no_data), Toast.LENGTH_SHORT).show();
+                }
+                else if (response.code()==403){
+                    Toast.makeText(MainActivity.this, getString(R.string.rate_limit), Toast.LENGTH_SHORT).show();
+                    isLastPage=true;
+                    progressBar.setVisibility(View.GONE);
 
-                if (currentPage != TOTAL_PAGES) adapter.addLoadingFooter();
-                else isLastPage = true;
+                }
             }
 
             @Override
@@ -262,47 +280,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
-    void getEditText(View view){
-        InputMethodManager imm = (InputMethodManager)getApplicationContext().getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
+    void getEditText(View view) {
+        InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        if (editText.getText().toString().matches("")){
-            Toast.makeText(getApplicationContext(), "user tidak ditemukan", Toast.LENGTH_SHORT).show();
+        if (NetworkUtils.hasNetwork(this)) {
+            if (editText.getText().toString().matches("")) {
+                Toast.makeText(getApplicationContext(), "user tidak ditemukan", Toast.LENGTH_SHORT).show();
+                adapter.getItemList().clear();
+                adapter.notifyDataSetChanged();
+            } else {
+                search = editText.getText().toString();
+                Toast.makeText(getApplicationContext(), search, Toast.LENGTH_SHORT).show();
+                Log.e("getEditText: ", search);
+                loadFirstPage(search);
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.error_msg_no_internet), Toast.LENGTH_SHORT).show();
             adapter.getItemList().clear();
             adapter.notifyDataSetChanged();
-            swipeRefreshLayout.setRefreshing(false);
-        }
-        else{
-            search=editText.getText().toString();
-            Toast.makeText(getApplicationContext(), search, Toast.LENGTH_SHORT).show();
-            Log.e("getEditText: ", search);
-            loadFirstPage(search);
         }
     }
+
     private void hideErrorView() {
         if (errorLayout.getVisibility() == View.VISIBLE) {
             errorLayout.setVisibility(View.GONE);
-            progressBar.setVisibility(View.VISIBLE);
-        }
-        else{
+            progressBar.setVisibility(View.GONE);
+        } else {
             progressBar.setVisibility(View.GONE);
         }
     }
-
-    private void doRefresh() {
-        progressBar.setVisibility(View.VISIBLE);
-        if (callUser(search).isExecuted())
-            callUser(search).cancel();
-
-        // TODO: Check if data is stale.
-        //  Execute network request if cache is expired; otherwise do not update data.
-        adapter.getItemList().clear();
-        adapter.notifyDataSetChanged();
-        loadFirstPage(search);
-        swipeRefreshLayout.setRefreshing(false);
-    }
-
 
 
     private Handler mHandler = new Handler();
@@ -315,11 +321,12 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         super.onDestroy();
 
-        if (mHandler != null) { mHandler.removeCallbacks(mRunnable); }
+        if (mHandler != null) {
+            mHandler.removeCallbacks(mRunnable);
+        }
     }
 
     @Override

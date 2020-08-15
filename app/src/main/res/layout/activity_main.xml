@@ -11,13 +11,9 @@
         android:id="@+id/main_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:layout_gravity="center" />
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/main_swiperefresh"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/searchEditText">
 
         <RelativeLayout
             android:id="@+id/relative_header"
@@ -50,7 +46,6 @@
                 android:paddingTop="@dimen/activity_margin_content"
                 android:paddingBottom="@dimen/activity_margin_content" />
         </RelativeLayout>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <include layout="@layout/error_layout" />
 </FrameLayout>
